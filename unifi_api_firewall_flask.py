@@ -109,8 +109,16 @@ def forward_to_unifi() -> Response:
     if path.endswith("?"):
         path = path[:-1]
 
+    ip = get_client_ip()
     url = f"{UNIFI_BASE}{path}"
     headers = filter_incoming_headers()
+
+    logger.info(
+        'PROXY - Forwarding request: ip=%s method=%s path="%s"',
+        ip,
+        request.method,
+        request.path
+    )
 
     data = request.get_data()
     resp = requests.request(
@@ -137,15 +145,44 @@ def forward_to_unifi() -> Response:
 def firewall_gate():
     ip = get_client_ip()
     if not is_ip_allowed(ip):
+        logger.warning(
+            'BLOCKED - IP not allowed: ip=%s method=%s path="%s" ua="%s"',
+            ip,
+            request.method,
+            request.path,
+            request.headers.get("user-agent", "")
+        )
         return jsonify({"detail": f"Source IP not allowed: {ip}"}), 403
 
     supplied = get_supplied_external_key()
     if not supplied:
+        logger.warning(
+            'BLOCKED - Missing API key: ip=%s method=%s path="%s" ua="%s"',
+            ip,
+            request.method,
+            request.path,
+            request.headers.get("user-agent", "")
+        )
         return jsonify({"detail": "Missing API key"}), 401
     if supplied != EXTERNAL_KEY:
+        logger.warning(
+            'BLOCKED - Invalid API key: ip=%s method=%s path="%s" supplied_key="%s..." ua="%s"',
+            ip,
+            request.method,
+            request.path,
+            supplied[:8] if len(supplied) >= 8 else "***",
+            request.headers.get("user-agent", "")
+        )
         return jsonify({"detail": "Invalid API key"}), 403
 
     if not is_allowed_path_and_method(request.method, request.path):
+        logger.warning(
+            'BLOCKED - Path not allowed: ip=%s method=%s path="%s" query="%s"',
+            ip,
+            request.method,
+            request.path,
+            request.query_string.decode("utf-8", errors="replace")
+        )
         unknown_logger.info(
             'ip=%s method=%s path="%s" query="%s" ua="%s"',
             ip,
