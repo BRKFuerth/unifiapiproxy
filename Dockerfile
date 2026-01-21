@@ -17,7 +17,7 @@ COPY --from=builder /root/.local /root/.local
 
 # Copy application files
 COPY unifi_api_firewall_flask.py .
-COPY config.yaml .
+COPY config.yaml.example config.yaml
 
 # Make sure scripts in .local are usable
 ENV PATH=/root/.local/bin:$PATH
