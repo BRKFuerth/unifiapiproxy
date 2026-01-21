@@ -1,0 +1,33 @@
+# Python
+.venv
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+unknown_paths.log
+
+# Environment
+.env
+
+# Config (enthält sensible API-Keys!)
+config.yaml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

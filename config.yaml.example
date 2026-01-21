@@ -1,0 +1,34 @@
+server:
+  trust_proxy_headers: true
+  real_ip_header: "x-forwarded-for"
+
+auth:
+  # WICHTIG: Ersetze dies mit einem sicheren, zufälligen API-Key!
+  # Generiere mit: openssl rand -base64 48
+  external_api_key: "CHANGE-ME-TO-SECURE-RANDOM-KEY"
+
+firewall:
+  allowed_source_ips:
+    - "127.0.0.1"
+    # Füge weitere erlaubte IPs hinzu:
+    # - "192.168.1.100"
+    # - "10.0.0.0/24"
+
+logging:
+  unknown_paths_log: "unknown_paths.log"
+
+unifi:
+  # UniFi Controller URL
+  base_url: "https://10.1.1.250"
+  
+  # UniFi API Key (erstelle in UniFi Controller unter System Settings)
+  api_key: "CHANGE-ME-TO-YOUR-UNIFI-API-KEY"
+  
+  # Header-Name für den UniFi API Key
+  api_key_header: "X-API-KEY"
+  
+  # TLS-Verifizierung (auf true setzen bei gültigem Zertifikat)
+  verify_tls: false
+  
+  # Timeout für UniFi API Anfragen (in Sekunden)
+  timeout_seconds: 15
