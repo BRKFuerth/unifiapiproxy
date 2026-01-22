@@ -72,14 +72,6 @@ curl -H "X-API-Key: dein-external-api-key" \
 curl http://localhost:8080/health
 ```
 
-## Docker Image von GitHub Container Registry
-
-Wenn GitHub Actions konfiguriert ist, wird bei jedem Tag automatisch ein Docker Image gebaut:
-
-```bash
-docker pull ghcr.io/BRKFuerth/unifiapiproxy:latest
-```
-
 ## Deployment
 
 ### Tag erstellen und pushen
