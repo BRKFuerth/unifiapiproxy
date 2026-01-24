@@ -47,6 +47,7 @@ logger.addHandler(sh)
 ALLOWED_RULES: Tuple[Tuple[str, re.Pattern], ...] = (
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/devices$")),
+    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients\?filter=macAddress\.eq\('[a-fA-F0-9:]+'\)$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+$")),
     ("POST", re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+/actions$")),
 )
@@ -73,9 +74,13 @@ def get_supplied_external_key() -> Optional[str]:
         supplied = supplied.split(" ", 1)[1].strip()
     return supplied
 
-def is_allowed_path_and_method(method: str, path: str) -> bool:
+def is_allowed_path_and_method(method: str, path: str, query: str = "") -> bool:
+    full_path = path
+    if query:
+        full_path = f"{path}?{query}"
+    
     for m, pat in ALLOWED_RULES:
-        if m == method and pat.match(path):
+        if m == method and pat.match(full_path):
             return True
     return False
 
@@ -175,13 +180,14 @@ def firewall_gate():
         )
         return jsonify({"detail": "Invalid API key"}), 403
 
-    if not is_allowed_path_and_method(request.method, request.path):
+    query = request.query_string.decode("utf-8", errors="replace")
+    if not is_allowed_path_and_method(request.method, request.path, query):
         logger.warning(
             'BLOCKED - Path not allowed: ip=%s method=%s path="%s" query="%s"',
             ip,
             request.method,
             request.path,
-            request.query_string.decode("utf-8", errors="replace")
+            query
         )
         unknown_logger.info(
             'ip=%s method=%s path="%s" query="%s" ua="%s"',
