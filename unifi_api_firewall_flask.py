@@ -1,7 +1,7 @@
 import ipaddress
 import logging
 import re
-from urllib.parse import unquote
+from urllib.parse import parse_qsl
 from typing import Optional, Dict, Any, Tuple
 
 import yaml
@@ -79,11 +79,12 @@ def get_supplied_external_key() -> Optional[str]:
 
 def is_allowed_path_and_method(method: str, path: str, query: str = "") -> bool:
     if method == "GET" and query:
-        decoded_query = unquote(query)
+        params = parse_qsl(query, keep_blank_values=True, strict_parsing=False)
+        filter_values = [value for key, value in params if key == "filter"]
         if re.match(r"^/proxy/network/integration/v1/sites/[^/]+/clients$", path):
-            return bool(CLIENTS_FILTER_QUERY_PATTERN.match(decoded_query))
+            return len(filter_values) == 1 and bool(CLIENTS_FILTER_QUERY_PATTERN.match(f"filter={filter_values[0]}"))
         if re.match(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts$", path):
-            return bool(WIFI_FILTER_QUERY_PATTERN.match(decoded_query))
+            return len(filter_values) == 1 and bool(WIFI_FILTER_QUERY_PATTERN.match(f"filter={filter_values[0]}"))
 
     for m, pat in ALLOWED_RULES:
         if m == method and pat.match(path):
