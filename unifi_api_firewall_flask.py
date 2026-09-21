@@ -47,8 +47,6 @@ logger.addHandler(sh)
 ALLOWED_RULES: Tuple[Tuple[str, re.Pattern], ...] = (
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/devices$")),
-    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients$")),
-    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+$")),
     ("POST", re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+/actions$")),
 )
