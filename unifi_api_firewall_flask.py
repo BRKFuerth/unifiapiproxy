@@ -1,6 +1,7 @@
 import ipaddress
 import logging
 import re
+from urllib.parse import unquote
 from typing import Optional, Dict, Any, Tuple
 
 import yaml
@@ -48,7 +49,7 @@ ALLOWED_RULES: Tuple[Tuple[str, re.Pattern], ...] = (
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/devices$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients\?filter=macAddress\.eq\('[a-fA-F0-9:]+'\)$")),
-    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts\?filter=hotspotConfiguration\.type\.eq\((?:'|%27)CAPTIVE_PORTAL(?:'|%27)\)$")),
+    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts\?filter=hotspotConfiguration\.type\.eq\('CAPTIVE_PORTAL'\)$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+$")),
     ("POST", re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+/actions$")),
 )
@@ -76,13 +77,17 @@ def get_supplied_external_key() -> Optional[str]:
     return supplied
 
 def is_allowed_path_and_method(method: str, path: str, query: str = "") -> bool:
-    full_path = path
+    candidate_paths = {path}
     if query:
-        full_path = f"{path}?{query}"
-    
+        candidate_paths.add(f"{path}?{query}")
+        candidate_paths.add(f"{path}?{unquote(query)}")
+
     for m, pat in ALLOWED_RULES:
-        if m == method and pat.match(full_path):
-            return True
+        if m != method:
+            continue
+        for candidate in candidate_paths:
+            if pat.match(candidate):
+                return True
     return False
 
 def filter_incoming_headers() -> Dict[str, str]:
