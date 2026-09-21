@@ -1,6 +1,7 @@
 import ipaddress
 import logging
 import re
+from urllib.parse import parse_qsl
 from typing import Optional, Dict, Any, Tuple
 
 import yaml
@@ -47,10 +48,12 @@ logger.addHandler(sh)
 ALLOWED_RULES: Tuple[Tuple[str, re.Pattern], ...] = (
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/devices$")),
-    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients\?filter=macAddress\.eq\('[a-fA-F0-9:]+'\)$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+$")),
     ("POST", re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+/actions$")),
 )
+
+CLIENTS_FILTER_QUERY_PATTERN = re.compile(r"^filter=macAddress\.eq\('[a-fA-F0-9:]+'\)$")
+WIFI_FILTER_QUERY_PATTERN = re.compile(r"^filter=hotspotConfiguration\.type\.eq\('CAPTIVE_PORTAL'\)$")
 
 def get_client_ip() -> str:
     if TRUST_PROXY:
@@ -75,12 +78,16 @@ def get_supplied_external_key() -> Optional[str]:
     return supplied
 
 def is_allowed_path_and_method(method: str, path: str, query: str = "") -> bool:
-    full_path = path
-    if query:
-        full_path = f"{path}?{query}"
-    
+    if method == "GET" and query:
+        params = parse_qsl(query, keep_blank_values=True, strict_parsing=False)
+        filter_values = [value for key, value in params if key == "filter"]
+        if re.match(r"^/proxy/network/integration/v1/sites/[^/]+/clients$", path):
+            return len(filter_values) == 1 and bool(CLIENTS_FILTER_QUERY_PATTERN.match(f"filter={filter_values[0]}"))
+        if re.match(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts$", path):
+            return len(filter_values) == 1 and bool(WIFI_FILTER_QUERY_PATTERN.match(f"filter={filter_values[0]}"))
+
     for m, pat in ALLOWED_RULES:
-        if m == method and pat.match(full_path):
+        if m == method and pat.match(path):
             return True
     return False
 
