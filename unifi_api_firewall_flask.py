@@ -1,7 +1,7 @@
 import ipaddress
 import logging
 import re
-from urllib.parse import unquote
+from urllib.parse import parse_qsl
 from typing import Optional, Dict, Any, Tuple
 
 import yaml
@@ -48,11 +48,14 @@ logger.addHandler(sh)
 ALLOWED_RULES: Tuple[Tuple[str, re.Pattern], ...] = (
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/devices$")),
-    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients\?filter=macAddress\.eq\('[a-fA-F0-9:]+'\)$")),
-    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts\?filter=hotspotConfiguration\.type\.eq\('CAPTIVE_PORTAL'\)$")),
+    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients$")),
+    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+$")),
     ("POST", re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+/actions$")),
 )
+
+CLIENTS_FILTER_PATTERN = re.compile(r"^macAddress\.eq\('[a-fA-F0-9:]+'\)$")
+WIFI_FILTER_VALUE = "hotspotConfiguration.type.eq('CAPTIVE_PORTAL')"
 
 def get_client_ip() -> str:
     if TRUST_PROXY:
@@ -77,17 +80,18 @@ def get_supplied_external_key() -> Optional[str]:
     return supplied
 
 def is_allowed_path_and_method(method: str, path: str, query: str = "") -> bool:
-    candidate_paths = {path}
-    if query:
-        candidate_paths.add(f"{path}?{query}")
-        candidate_paths.add(f"{path}?{unquote(query)}")
+    if method == "GET" and query:
+        params = parse_qsl(query, keep_blank_values=True, strict_parsing=False)
+        if len(params) == 1 and params[0][0] == "filter":
+            filter_value = params[0][1]
+            if re.match(r"^/proxy/network/integration/v1/sites/[^/]+/clients$", path):
+                return bool(CLIENTS_FILTER_PATTERN.match(filter_value))
+            if re.match(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts$", path):
+                return filter_value == WIFI_FILTER_VALUE
 
     for m, pat in ALLOWED_RULES:
-        if m != method:
-            continue
-        for candidate in candidate_paths:
-            if pat.match(candidate):
-                return True
+        if m == method and pat.match(path):
+            return True
     return False
 
 def filter_incoming_headers() -> Dict[str, str]:

@@ -87,6 +87,7 @@ Dies triggert automatisch den GitHub Actions Workflow, der das Docker Image baut
 
 - `GET /proxy/network/integration/v1/sites`
 - `GET /proxy/network/integration/v1/sites/{site}/devices`
+- `GET /proxy/network/integration/v1/sites/{site}/clients?filter=macAddress.eq('{mac}')`
 - `GET /proxy/network/integration/v1/sites/{site}/wifi/broadcasts?filter=hotspotConfiguration.type.eq('CAPTIVE_PORTAL')`
 - `GET /proxy/network/integration/v1/sites/{site}/clients/{client}`
 - `POST /proxy/network/integration/v1/sites/{site}/clients/{client}/actions`
