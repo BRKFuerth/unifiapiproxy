@@ -48,6 +48,7 @@ ALLOWED_RULES: Tuple[Tuple[str, re.Pattern], ...] = (
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/devices$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients\?filter=macAddress\.eq\('[a-fA-F0-9:]+'\)$")),
+    ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts\?filter=hotspotConfiguration\.type\.eq\((?:'|%27)CAPTIVE_PORTAL(?:'|%27)\)$")),
     ("GET",  re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+$")),
     ("POST", re.compile(r"^/proxy/network/integration/v1/sites/[^/]+/clients/[^/]+/actions$")),
 )
