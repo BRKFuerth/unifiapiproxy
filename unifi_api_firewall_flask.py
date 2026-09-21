@@ -88,6 +88,7 @@ def is_allowed_path_and_method(method: str, path: str, query: str = "") -> bool:
                 return bool(CLIENTS_FILTER_PATTERN.match(filter_value))
             if re.match(r"^/proxy/network/integration/v1/sites/[^/]+/wifi/broadcasts$", path):
                 return filter_value == WIFI_FILTER_VALUE
+        return False
 
     for m, pat in ALLOWED_RULES:
         if m == method and pat.match(path):
